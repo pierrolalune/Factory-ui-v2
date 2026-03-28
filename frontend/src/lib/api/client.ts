@@ -42,6 +42,19 @@ class ApiClient {
     return response.json() as Promise<T>
   }
 
+  async patch<T>(path: string, body?: unknown): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    })
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: response.statusText }))
+      throw new ApiError(response.status, error.detail ?? "Unknown error", error.code)
+    }
+    return response.json() as Promise<T>
+  }
+
   async delete<T>(path: string): Promise<T> {
     const response = await fetch(`${this.baseUrl}${path}`, { method: "DELETE" })
     if (!response.ok) {

@@ -1,11 +1,5 @@
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <div className="min-h-screen bg-bg-body">
-      <main>{children}</main>
-    </div>
-  )
+import { AppShell } from "@/components/shell/AppShell"
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return <AppShell>{children}</AppShell>
 }

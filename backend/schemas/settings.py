@@ -11,6 +11,8 @@ class PricingConfig(BaseModel):
 
 
 class Settings(BaseModel):
+    """Internal model — contains the raw (unmasked) token."""
+
     github_token: str | None = None
     github_username: str | None = None
     github_token_valid: bool | None = None
@@ -18,3 +20,30 @@ class Settings(BaseModel):
     skip_permissions: bool = False
     worktree_base_path: str | None = None
     pricing: PricingConfig = PricingConfig()
+
+
+class SettingsResponse(BaseModel):
+    """Public-facing model — token is masked."""
+
+    github_token_set: bool = False
+    github_token_masked: str | None = None
+    github_username: str | None = None
+    github_token_valid: bool | None = None
+    default_model: str = "claude-sonnet-4-6"
+    skip_permissions: bool = False
+    worktree_base_path: str | None = None
+    pricing: PricingConfig = PricingConfig()
+
+
+class GitHubTokenRequest(BaseModel):
+    token: str
+
+
+class UpdateSettingsRequest(BaseModel):
+    """All fields optional — supports partial PATCH."""
+
+    github_token: str | None = None
+    default_model: str | None = None
+    skip_permissions: bool | None = None
+    worktree_base_path: str | None = None
+    pricing: PricingConfig | None = None

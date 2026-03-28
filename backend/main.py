@@ -17,6 +17,7 @@ from backend.routers import (
     run,
     runs,
     settings,
+    system,
     worktrees,
 )
 
@@ -91,3 +92,4 @@ app.include_router(git.router, prefix="/api/projects/{project_id}/git", tags=["g
 app.include_router(worktrees.router, prefix="/api/projects/{project_id}/worktrees", tags=["worktrees"])
 app.include_router(github.router, prefix="/api", tags=["github"])
 app.include_router(settings.router, prefix="/api/settings", tags=["settings"])
+app.include_router(system.router, prefix="/api/system", tags=["system"])

@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { DM_Sans, DM_Mono } from "next/font/google"
 import "./globals.css"
+import { Providers } from "./providers"
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -25,7 +26,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${dmSans.variable} ${dmMono.variable}`}>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   )
 }
