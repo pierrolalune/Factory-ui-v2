@@ -7,19 +7,21 @@ import { RunNavigator } from "@/components/project/RunNavigator"
 import { ProjectOverview } from "@/components/project/ProjectOverview"
 import { TerminalPane } from "@/components/terminal/TerminalPane"
 import { LaunchTab } from "@/components/project/LaunchTab"
-import { BranchesTab } from "@/components/project/BranchesTab"
 import { ReviewTab } from "@/components/project/ReviewTab"
+import { GitPanel } from "@/components/project/GitPanel"
+import { WorktreePanel } from "@/components/project/WorktreePanel"
 
 interface PageProps {
   params: Promise<{ id: string }>
   searchParams: Promise<{ focusRun?: string }>
 }
 
-type RightTab = "launch" | "branches" | "review"
+type RightTab = "launch" | "branches" | "git" | "review"
 
 const RIGHT_TABS: { key: RightTab; label: string }[] = [
   { key: "launch", label: "Launch" },
-  { key: "branches", label: "Branches" },
+  { key: "branches", label: "Worktrees" },
+  { key: "git", label: "Git" },
   { key: "review", label: "Review" },
 ]
 
@@ -103,7 +105,13 @@ export default function ProjectIDEPage({ params, searchParams }: PageProps) {
             {/* Tab content */}
             <div className="flex-1 overflow-y-auto">
               {activeRightTab === "launch" && <LaunchTab projectId={projectId} />}
-              {activeRightTab === "branches" && <BranchesTab />}
+              {activeRightTab === "branches" && (
+                <WorktreePanel
+                  projectId={projectId}
+                  onOpenGit={() => setActiveRightTab("git")}
+                />
+              )}
+              {activeRightTab === "git" && <GitPanel projectId={projectId} />}
               {activeRightTab === "review" && <ReviewTab projectId={projectId} />}
             </div>
           </>
