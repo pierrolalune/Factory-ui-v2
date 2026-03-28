@@ -2,7 +2,7 @@
 
 **Status**: Final
 **Date**: 2026-03-28
-**Scope**: Full rewrite from clean repo
+**Scope**: Complete architecture specification
 
 **Related specs**:
 - `v2-launch-panel-ux.md` — Launch panel UX detail (command input, autocomplete, controls)
@@ -16,40 +16,9 @@
 |---|---|
 | **Feature name** | Factory UI V2 |
 | **Persona** | Solo power user running Claude Code against multiple projects, from desktop or phone on local WiFi |
-| **Problem** | V1 accumulated too many half-baked features (grader, optimizer, pipelines, workspace) that buried the core value: running Claude Code commands and reviewing what changed |
-| **Solution** | Focused rewrite keeping only proven high-value features (run execution, git/worktrees, code review, run history, simplified library). Remove everything else. Start clean. |
-| **Out of scope** | Auth, grader, optimizer, pipelines, global workspace, project workspace (tasks/notes), GitLab, email/SMTP, multi-user, cloud sync |
-
----
-
-## What Gets Cut
-
-| Removed | Reason |
-|---|---|
-| Auth (`auth.py`, `auth_service`, JWT, bcrypt) | Single-user local tool — zero need |
-| Grader (3 services, 10 components) | Half-baked, rarely used |
-| Optimizer (mutation engine, sessions) | Not enough standalone value |
-| Pipelines (sequential run chaining) | Not core to V2 |
-| Global Workspace (kanban, bookmarks) | Overhead, not workflow-focused |
-| Project Workspace (tasks, notes, pinned files) | Noise, not core |
-| GitLab service | Not needed — GitHub is sufficient |
-| Email service (SMTP, notifications) | N/A without multi-user |
-| Batch launch | Removed — not core |
-| Library folders, packages, subcategories | Replaced by flat items + tags |
-
----
-
-## What Carries Over (proven, keep)
-
-| Feature | Notes |
-|---|---|
-| PTY execution model | ConPTY + stream-json + WebSocket per run — unchanged |
-| Run History | Persist, query, resume |
-| Git service + Worktrees UI | Keep, improve UX |
-| GitHub service | Keep — PR creation, repo linking, remote ops |
-| Code Review (dep graph) | Keep, switch from D3 iframe to ReactFlow |
-| Claude Import | Redesign the UX, keep the scanner logic |
-| Library | Full redesign: flat items + tags, no folders/packages |
+| **Problem** | Power users need a focused tool for running Claude Code commands and reviewing what changed — without feature bloat |
+| **Solution** | High-value features only: run execution, git/worktrees, code review, run history, simplified library |
+| **Out of scope** | Auth, multi-user, cloud sync, GitLab, email/SMTP |
 
 ---
 
@@ -133,13 +102,13 @@ graph TD
     GHSvc -->|REST| GHApi
 ```
 
-Key change from V1: **No file_provisioner in the run launch path.** Commands must already exist in `project/.claude/`. The library's "Copy to project" action (via `library_service`) handles installing items before the user launches a run.
+**Important**: Commands must already exist in `project/.claude/` before launching. The library's "Copy to project" action (via `library_service`) handles installing items before the user launches a run.
 
 ---
 
-## Backend V2
+## Backend
 
-### Routers (10, down from 17)
+### Routers (10)
 
 | Router | File | Key Endpoints |
 |---|---|---|
@@ -154,7 +123,7 @@ Key change from V1: **No file_provisioner in the run launch path.** Commands mus
 | `github.py` | GitHub | token CRUD, remote info, push, PR create/list |
 | `settings.py` | Settings | GET, PATCH |
 
-### Services (14, down from 35+)
+### Services (14)
 
 ```
 backend/services/
@@ -163,7 +132,7 @@ backend/services/
     project_service.py       # Project registry (flat JSON), file tree, file read/write
     run_history_service.py   # Persist + query run history
     run_output_service.py    # Store + serve PTY output (gzipped, capped 2MB)
-    library_service.py       # V2 flat items + tags + copy-to-project
+    library_service.py       # Flat items + tags + copy-to-project
     claude_folder_scanner.py # Scan .claude/ for import preview
     claude_session_service.py# Parse session files for cost/token recovery
     claude_cli.py            # CLI invocation helpers (build command, clean env)
@@ -186,13 +155,11 @@ pywinpty             # Windows ConPTY
 code-review-graph    # Dependency graph builder
 ```
 
-Removed from V1: `python-jose`, `bcrypt`, `aiosmtplib` (no auth, no email).
-
 ---
 
-## Frontend V2
+## Frontend
 
-### Routes (9, down from 14+)
+### Routes (9)
 
 ```
 app/(app)/
@@ -210,9 +177,7 @@ app/(app)/
     settings/page.tsx             # Settings
 ```
 
-No auth pages (`/login`, `/setup`). No grader, optimizer, pipelines, or workspace pages.
-
-### Component Groups (~55, down from 130+)
+### Component Groups (~55)
 
 ```
 components/
@@ -260,13 +225,9 @@ components/
 
 ---
 
-## Library V2 -- The Key Redesign
+## Library
 
-### V1 Problem
-
-6 organizational layers: packages -> folders -> subcategories -> items + usage stats + built-in overrides. Impossible to navigate.
-
-### V2 Model: Flat Items + Tags
+### Data Model: Flat Items + Tags
 
 ```typescript
 interface LibraryItem {
@@ -292,11 +253,11 @@ ClaudeLibrairy/
         [id].json      # Full item including content
 ```
 
-No packages. No folders. No subcategories. **Search + tag filter is the navigation.**
+**Search + tag filter is the navigation.**
 
 ### Copy to Project
 
-Instead of V1's file provisioner (which copied items at run launch time), V2 has an explicit "Copy to project" action in the library. This copies the item's `.md` file to `project/.claude/{type}s/{stem}.md`. The user must do this before launching a command — the launch panel only shows commands already installed in the project.
+The library has an explicit "Copy to project" action. This copies the item's `.md` file to `project/.claude/{type}s/{stem}.md`. The user must do this before launching a command — the launch panel only shows commands already installed in the project.
 
 ### Import Flow (Claude Import Redesign)
 
@@ -326,8 +287,6 @@ ClaudeLibrairy/                  # Library (flat schema)
     items/
         {id}.json                # Full items with content
 ```
-
-Removed from V1: workspace.json, global workspace, pipeline definitions, grader/optimizer data, auth credentials in settings, builtin overrides file.
 
 ---
 
@@ -446,13 +405,3 @@ HTTP status codes: 400 (validation), 404 (not found), 409 (conflict), 500 (serve
 - Given a screen < 640px, Then bottom navigation is visible and sidebar is hidden
 - Given the terminal on mobile, Then it is scrollable with touch
 
----
-
-## Migration Notes (V1 -> V2)
-
-Since V2 is a **clean repo**, there is no automated migration. Manual steps:
-1. Copy `ClaudeLibrairy/` items — re-index into the new flat schema (remove folders, packages, subcategories)
-2. Copy `~/.factory-cli-projects.json` — format is compatible
-3. Copy `~/.factory-projects/` run history — format review needed (run type enum changed)
-4. Copy `~/.factory-cli.json` — remove `auth` section, remove GitLab/SMTP fields
-5. All grader/optimizer/pipeline/workspace data can be discarded

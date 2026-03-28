@@ -35,7 +35,7 @@ Two key corrections from earlier drafts:
 | **Raw** | `POST /api/run/raw` | Opens interactive `claude` session (no `--print`, no stream-json) | `raw-` |
 | **Resume** | `POST /api/run/resume` | Resumes a past Claude session via `--resume` | `rs-` |
 
-No `task` endpoint, no `workflow` endpoint — from the user's perspective, everything is a `/cmd`. The distinction between "command" and "workflow" lives in the `.md` files inside `.claude/`, not in Factory UI.
+From the user's perspective, everything is a `/cmd`. The distinction between "command" and "workflow" lives in the `.md` files inside `.claude/`, not in Factory UI.
 
 ---
 

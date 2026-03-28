@@ -10,7 +10,7 @@
 
 The Library is a collection of reusable Claude Code items: commands, workflows, skills, and claude-md files. Users browse the library to find items to copy into their projects, and manage their personal collection.
 
-V2 redesigns the library from scratch. The V1 library had nested organizational layers (packages, folders, subcategories) that were confusing. V2 uses a **flat list with tags**. There are no folders or packages.
+The library uses a **flat list with tags**. There are no folders or packages.
 
 This spec covers:
 - The `/library` page (browse, search, filter)

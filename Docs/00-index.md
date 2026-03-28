@@ -1,7 +1,6 @@
 # Factory UI V2 — Specification Index
 
 This folder contains the complete feature specifications for Factory UI V2.
-V2 is a clean-repo rewrite. Developers and the PO have no access to V1 code.
 
 ## Reading Order
 

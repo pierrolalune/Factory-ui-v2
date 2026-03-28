@@ -27,17 +27,15 @@ The routing logic is simple: if the input starts with `/`, parse the stem and ar
 
 ---
 
-## V1 Problems This Spec Fixes
+## Design Principles
 
-| V1 Problem | V2 Solution |
+| Principle | Detail |
 |---|---|
-| Free-form task input in launch panel | Removed — use Raw Claude Terminal instead |
-| POST /api/run/task and POST /api/run/workflow endpoints | Removed — only /api/run/command, /api/run/raw, /api/run/resume |
-| Workflow context entries (text + file path fields) | Removed — no workflow launch concept |
-| Browse Library button in launch panel | Removed — install commands from Library page first, then they appear in autocomplete |
-| Batch launch modal | Cut in V2 |
-| Direct agent launch | Removed — agents are command internals, not launch targets |
-| Type selector exposed to user | Removed — there is only one input mode |
+| Command-only input | `/cmd args` is the only input mode — free-form interaction uses Raw Claude Terminal |
+| Single endpoint model | Only `/api/run/command`, `/api/run/raw`, `/api/run/resume` |
+| No inline library browse | Commands must be installed from Library page first, then they appear in autocomplete |
+| No batch launch | One run at a time from the launch panel |
+| Agents are internal | Agents are command internals, not direct launch targets |
 
 ---
 
@@ -321,18 +319,3 @@ User clicks [↻] on a recent run
 | LaunchTab assembly + mobile layout | M |
 | TanStack Query hooks for launch panel | S |
 
----
-
-## What Was Cut from V1
-
-| Removed | Reason |
-|---|---|
-| Free-form task input (plain text box) | Free-form interaction belongs in Raw Claude Terminal, not the launch panel |
-| POST /api/run/task | Endpoint does not exist in V2 |
-| POST /api/run/workflow | Endpoint does not exist in V2 — workflows are just commands |
-| Workflow context entries UI | No workflow launch concept in V2 |
-| Browse Library button in launch panel | Library items must be installed to the project first; launch panel shows only what is installed |
-| Batch launch modal | Cut in V2 |
-| Direct agent launch | Agents are command internals, not launch targets |
-| Separate LaunchModal per type | Unified into single command input |
-| Type selector | There is one input: `/cmd args` |

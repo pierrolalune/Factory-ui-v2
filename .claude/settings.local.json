@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.anthropic.com)",
+      "Bash(npm install:*)",
+      "Bash(/tmp/dependency-analysis.txt:*)",
+      "Read(//tmp/**)",
+      "Bash(mv ai-feature-implementation.md archived/)",
+      "Bash(mv code-efficiency-analysis.md archived/)",
+      "Bash(mv code-quality-analysis.md archived/)",
+      "Bash(mv code-reuse-analysis.md archived/)",
+      "Bash(mv data-analysis.md archived/)",
+      "Bash(ls \"/c/Users/pierr/Desktop/Factory/TT/.claude/skills/\"*.md)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(git commit*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'staged=$(git diff --cached --name-only 2>/dev/null); if echo \"$staged\" | grep -qE \"^\\.claude/state/.*\\.json$\"; then echo \"BLOCKED: .claude/state/*.json files should not be committed\" >&2; exit 1; fi; if echo \"$staged\" | grep -qiE \"\\.(env|pem|key)$|credentials|secret\"; then echo \"BLOCKED: Potential secrets file staged\" >&2; exit 1; fi'"
+          }
+        ]
+      }
+    ]
+  }
+}

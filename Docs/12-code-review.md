@@ -10,7 +10,7 @@
 
 Code Review provides a visual dependency graph of the project's codebase. The user can explore module dependencies, understand the blast radius of changes, and review what files are affected by recent git modifications.
 
-V2 uses `@xyflow/react` (ReactFlow) + dagre for layout, rendered natively in React. V1 used D3 in an iframe with postMessage — that approach is replaced entirely.
+The graph uses `@xyflow/react` (ReactFlow) + dagre for layout, rendered natively in React.
 
 The graph is built by the `code-review-graph` Python library, which creates a SQLite database of nodes (functions, classes, modules) and edges (imports, calls, extends).
 

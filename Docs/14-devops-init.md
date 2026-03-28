@@ -9,7 +9,7 @@
 
 This spec defines the complete project scaffolding, tooling, scripts, CI, and developer experience setup for Factory UI V2. It is the first thing executed — Sprint 0 — before any feature code is written.
 
-V2 is a clean-repo monorepo with a FastAPI backend and Next.js 15 frontend. No Docker in V1 — V2 adds optional Docker Compose for one-command startup. No CI in V1 — V2 adds GitHub Actions for lint + test on every push.
+The project is a monorepo with a FastAPI backend and Next.js 15 frontend. Includes optional Docker Compose for one-command startup and GitHub Actions for lint + test on every push.
 
 ---
 
@@ -816,7 +816,7 @@ Runtime log directory `logs/` is git-ignored and created automatically on startu
 | Response format | JSON, `snake_case` keys |
 | Frontend transform | Zod schemas convert `snake_case` to `camelCase` |
 | Error format | `{ "detail": "message", "code": "error_code" }` |
-| Auth | None (V2 is single-user, no JWT/cookies) |
+| Auth | None (single-user, no JWT/cookies) |
 | CORS | Auto-detect localhost + LAN IPs on port 3000 |
 | API prefix | All endpoints under `/api/` |
 | WebSocket prefix | `/ws/run/{run_id}` (no auth ticket needed in V2) |

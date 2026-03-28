@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Users/pierr/Desktop/Factory/TT/.claude/agents/ -type f -name *.md -o -name *.txt -o -name *.json -o -name *.yaml -o -name *.yml)",
+      "Bash(grep -v \"^workflows$\")",
+      "Bash(rm \"C:/Users/pierr/Desktop/Factory/TT/.claude/skills/ux-best-practices.md\")",
+      "Bash(rm \"C:/Users/pierr/Desktop/Factory/TT/.claude/skills/wcag-compliance-report.md\")",
+      "Bash(rm \"C:/Users/pierr/Desktop/Factory/TT/.claude/skills/mega-plan-review-mode.md\")",
+      "Bash(rm \"C:/Users/pierr/Desktop/Factory/TT/.claude/skills/git-workflow.md\")"
+    ]
+  }
+}

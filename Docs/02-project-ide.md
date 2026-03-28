@@ -22,7 +22,7 @@ This is NOT a traditional editor. The user rarely types code — they launch Cla
 
 - **Launch = `/cmd` only**. The command input accepts `/stem args` exclusively. The command must already exist in the project's `.claude/` directory. Free-form interaction with Claude uses the Raw Claude Terminal, not the command input.
 - **No free-form task mode in the IDE.** There is no `POST /api/run/task` endpoint. Users who want free-form interaction open the Raw Claude Terminal.
-- **Project Overview is the default center view** — shows git status, active runs, recent activity. The user liked this in V1.
+- **Project Overview is the default center view** — shows git status, active runs, recent activity.
 - **Left panel = Run Navigator** — all active and recent runs grouped by worktree. Click any run to focus its terminal.
 - **Branches tab = worktrees + merge** — since the user merges frequently, merge actions live next to worktrees (not buried in a separate page).
 
