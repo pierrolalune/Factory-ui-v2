@@ -1,0 +1,51 @@
+{
+  "name": "factory-ui-v2",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui"
+  },
+  "dependencies": {
+    "@codemirror/lang-css": "^6",
+    "@codemirror/lang-html": "^6",
+    "@codemirror/lang-javascript": "^6",
+    "@codemirror/lang-json": "^6",
+    "@codemirror/lang-markdown": "^6",
+    "@codemirror/lang-python": "^6",
+    "@codemirror/view": "^6",
+    "@tanstack/react-query": "^5",
+    "@xterm/addon-fit": "^0.11",
+    "@xterm/xterm": "^6",
+    "@xyflow/react": "^12",
+    "dagre": "^0.8",
+    "lucide-react": "^0.400",
+    "next": "^15",
+    "react": "^19",
+    "react-dom": "^19",
+    "react-hook-form": "^7",
+    "react-markdown": "^10",
+    "remark-gfm": "^4",
+    "zod": "^4",
+    "zustand": "^5"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "@playwright/test": "^1.50",
+    "@tailwindcss/postcss": "^4",
+    "@types/dagre": "^0.7",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "^15",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
