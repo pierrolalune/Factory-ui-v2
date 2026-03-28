@@ -5,7 +5,7 @@ import { PanelRight } from "lucide-react"
 import { useIDEStore } from "@/store/ide-store"
 import { RunNavigator } from "@/components/project/RunNavigator"
 import { ProjectOverview } from "@/components/project/ProjectOverview"
-import { TerminalPlaceholder } from "@/components/terminal/TerminalPlaceholder"
+import { TerminalPane } from "@/components/terminal/TerminalPane"
 import { LaunchTab } from "@/components/project/LaunchTab"
 import { BranchesTab } from "@/components/project/BranchesTab"
 import { ReviewTab } from "@/components/project/ReviewTab"
@@ -31,7 +31,6 @@ export default function ProjectIDEPage({ params, searchParams }: PageProps) {
     initProject,
     centerMode,
     focusedRunId,
-    showOverview,
     focusRun,
     activeRightTab,
     setActiveRightTab,
@@ -61,12 +60,18 @@ export default function ProjectIDEPage({ params, searchParams }: PageProps) {
       {/* Center area: flex, main */}
       <div className="flex-1 flex flex-col overflow-hidden bg-[#10161f]">
         {centerMode === "overview" && <ProjectOverview projectId={projectId} />}
-        {centerMode === "terminal" && focusedRunId && (
-          <TerminalPlaceholder runId={focusedRunId} onClose={showOverview} />
+
+        {/* Terminal panes: all focused run terminals are mounted, show/hide via display */}
+        {focusedRunId && (
+          <TerminalPane
+            runId={focusedRunId}
+            visible={centerMode === "terminal"}
+          />
         )}
+
         {centerMode === "editor" && (
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-sm text-[#607896]">File editor coming in Sprint 3.</p>
+            <p className="text-sm text-[#607896]">File editor coming in a future sprint.</p>
           </div>
         )}
       </div>
@@ -97,7 +102,7 @@ export default function ProjectIDEPage({ params, searchParams }: PageProps) {
 
             {/* Tab content */}
             <div className="flex-1 overflow-y-auto">
-              {activeRightTab === "launch" && <LaunchTab />}
+              {activeRightTab === "launch" && <LaunchTab projectId={projectId} />}
               {activeRightTab === "branches" && <BranchesTab />}
               {activeRightTab === "review" && <ReviewTab projectId={projectId} />}
             </div>

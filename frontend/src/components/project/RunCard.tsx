@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Circle, Check, X, Ban, Zap } from "lucide-react"
+import { Circle, Check, X, Ban } from "lucide-react"
 import { useIDEStore } from "@/store/ide-store"
+import { AwaitingInputBadge } from "@/components/terminal/AwaitingInputBadge"
 import type { RunSummary } from "@/lib/api/schemas/run"
 
 interface RunCardProps {
@@ -20,11 +21,10 @@ function formatElapsed(startedAt: string | undefined, completedAt: string | unde
 }
 
 function RunStatusIcon({ status }: { status: string }) {
-  if (status === "active") return <Circle size={8} className="fill-[#5ecf3a] text-[#5ecf3a] animate-pulse" />
-  if (status === "awaiting_input") return <Zap size={10} className="text-[#f59e0b] animate-pulse" />
-  if (status === "completed") return <Check size={12} className="text-[#22c55e]" />
-  if (status === "failed") return <X size={12} className="text-[#f25c5c]" />
-  return <Ban size={12} className="text-[#607896]" />
+  if (status === "active") return <Circle size={8} className="fill-[#5ecf3a] text-[#5ecf3a] animate-pulse shrink-0" />
+  if (status === "completed") return <Check size={12} className="text-[#22c55e] shrink-0" />
+  if (status === "failed") return <X size={12} className="text-[#f25c5c] shrink-0" />
+  return <Ban size={12} className="text-[#607896] shrink-0" />
 }
 
 export function RunCard({ run }: RunCardProps) {
@@ -50,20 +50,24 @@ export function RunCard({ run }: RunCardProps) {
         ${isFocused ? "border-[#4195e8] bg-[#1f2a3e]" : "border-[#263245] bg-[#192030] hover:bg-[#1f2a3e]"}
         ${isAwaiting ? "border-l-2 border-l-[#f59e0b]" : ""}`}
     >
-      <div className="flex items-center gap-2">
-        <RunStatusIcon status={run.status} />
-        <span className="text-sm font-medium text-[#dce8f5] truncate">{label}</span>
+      <div className="flex items-center gap-2 min-w-0">
+        {/* For awaiting_input, we show the badge inline instead of a dot icon */}
+        {!isAwaiting && <RunStatusIcon status={run.status} />}
+        <span className="text-sm font-medium text-[#dce8f5] truncate flex-1">{label}</span>
         <span className="ml-auto text-xs font-mono text-[#8299b8] tabular-nums shrink-0">{elapsed}</span>
         {cost && <span className="text-xs font-mono text-[#607896] shrink-0">{cost}</span>}
       </div>
-      {run.phase && (
-        <p className="mt-1 text-xs text-[#8299b8] truncate pl-4">
-          {isAwaiting ? (
-            <span className="text-[#f59e0b]">Waiting for your input</span>
-          ) : (
-            run.phase
-          )}
-        </p>
+
+      {/* Awaiting input badge takes full width below title row */}
+      {isAwaiting && (
+        <div className="mt-1.5 pl-0">
+          <AwaitingInputBadge />
+        </div>
+      )}
+
+      {/* Phase line for active (non-awaiting) runs */}
+      {run.phase && !isAwaiting && (
+        <p className="mt-1 text-xs text-[#8299b8] truncate pl-4">{run.phase}</p>
       )}
     </button>
   )

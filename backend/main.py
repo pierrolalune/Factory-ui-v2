@@ -1,10 +1,12 @@
+import base64
+import json
 import logging
 import socket
 from contextlib import asynccontextmanager
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.routers import (
@@ -84,6 +86,9 @@ async def health():
 
 app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 app.include_router(run.router, prefix="/api/run", tags=["run"])
+# Commands discovery: GET /api/projects/{project_id}/commands lives in the run router
+# but is served under /api (not /api/run) so it resolves as /api/projects/{id}/commands
+app.include_router(run.commands_router, prefix="/api", tags=["commands"])
 app.include_router(runs.router, prefix="/api/runs", tags=["runs"])
 app.include_router(library.router, prefix="/api/library", tags=["library"])
 app.include_router(claude_import.router, prefix="/api/library/claude-import", tags=["import"])
@@ -93,3 +98,60 @@ app.include_router(worktrees.router, prefix="/api/projects/{project_id}/worktree
 app.include_router(github.router, prefix="/api", tags=["github"])
 app.include_router(settings.router, prefix="/api/settings", tags=["settings"])
 app.include_router(system.router, prefix="/api/system", tags=["system"])
+
+
+@app.websocket("/ws/run/{run_id}")
+async def run_websocket(websocket: WebSocket, run_id: str) -> None:
+    """WebSocket endpoint for run terminal output and status updates."""
+    from backend.services.process_manager import process_manager
+
+    await websocket.accept()
+    run_state = process_manager.get_run(run_id)
+    if run_state is None:
+        await websocket.send_text(json.dumps({"type": "error", "message": "run not found"}))
+        await websocket.close()
+        return
+
+    # Send full run state on connect
+    await websocket.send_text(json.dumps({"type": "run_info", "run": run_state}))
+
+    # Replay buffered PTY output (last ~500 KB)
+    buffer = process_manager.get_output_buffer(run_id)
+    if buffer:
+        await websocket.send_text(
+            json.dumps({"type": "pty_output", "data": base64.b64encode(buffer).decode()})
+        )
+
+    process_manager.subscribe_ws(run_id, websocket)
+    try:
+        while True:
+            msg = await websocket.receive_text()
+            _handle_ws_client_message(run_id, msg)
+    except WebSocketDisconnect:
+        pass
+    finally:
+        process_manager.unsubscribe_ws(run_id, websocket)
+
+
+def _handle_ws_client_message(run_id: str, raw: str) -> None:
+    """Handle messages sent from the frontend to the run WebSocket."""
+    try:
+        msg = json.loads(raw)
+    except Exception:
+        return
+    if msg.get("type") == "resize":
+        _resize_pty(run_id, msg.get("cols", 120), msg.get("rows", 40))
+
+
+def _resize_pty(run_id: str, cols: int, rows: int) -> None:
+    """Resize the PTY for a running process."""
+    from backend.services.process_manager import process_manager
+
+    with process_manager._lock:
+        proc = process_manager._processes.get(run_id)
+    if proc is None:
+        return
+    try:
+        proc.setwinsize(rows, cols)
+    except Exception as exc:
+        logger.debug("PTY resize error for %s: %s", run_id, exc)
