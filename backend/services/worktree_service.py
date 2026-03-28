@@ -1,0 +1,2 @@
+class WorktreeService:
+    pass

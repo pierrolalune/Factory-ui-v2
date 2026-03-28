@@ -1,0 +1,22 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ~/.factory-cli.json:/root/.factory-cli.json
+      - ~/.factory-cli-projects.json:/root/.factory-cli-projects.json
+      - ~/.factory-projects:/root/.factory-projects
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped

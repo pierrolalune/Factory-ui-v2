@@ -1,0 +1,2 @@
+class RunOutputService:
+    pass
