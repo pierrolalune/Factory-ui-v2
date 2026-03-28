@@ -34,7 +34,7 @@ jobs:
       - name: Set up Node 18
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "20"
 
       - name: Install pnpm
         run: corepack enable && corepack prepare pnpm@9 --activate
