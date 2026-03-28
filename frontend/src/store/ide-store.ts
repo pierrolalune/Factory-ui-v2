@@ -4,7 +4,7 @@ import { create } from "zustand"
 
 type LeftMode = "runs" | "files"
 type CenterMode = "overview" | "terminal" | "editor"
-type RightTab = "launch" | "branches" | "review"
+type RightTab = "launch" | "branches" | "git" | "review"
 
 interface IDEStore {
   projectId: string | null
