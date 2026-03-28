@@ -1,9 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { AlertCircle, GitBranch, Loader2, Plus, Trash2, X } from "lucide-react"
+import { AlertCircle, GitPullRequest, Info, GitBranch, Loader2, Plus, Trash2, X } from "lucide-react"
+import Link from "next/link"
 import { useBranches, useCreateWorktree, useDeleteWorktree, useWorktrees } from "@/hooks/use-worktrees"
+import { useRemoteInfo } from "@/hooks/use-github"
 import type { Worktree } from "@/lib/api/schemas/git"
+import { PushButton } from "./PushButton"
+import { CreatePRModal } from "./CreatePRModal"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Delete confirmation dialog
@@ -206,12 +210,16 @@ function CreateWorktreeForm({ projectId, onClose }: CreateFormProps) {
 // ──────────────────────────────────────────────────────────────────────────────
 
 interface WorktreeCardProps {
+  projectId: string
   worktree: Worktree
   onDelete: (wt: Worktree) => void
   onOpenGit: (wt: Worktree) => void
 }
 
-function WorktreeCard({ worktree, onDelete, onOpenGit }: WorktreeCardProps) {
+function WorktreeCard({ projectId, worktree, onDelete, onOpenGit }: WorktreeCardProps) {
+  const [showPRModal, setShowPRModal] = useState(false)
+  const { data: remote } = useRemoteInfo(projectId)
+
   return (
     <div className="border border-[#263245] bg-[#1f2a3e] rounded-xl p-3 space-y-1">
       <div className="flex items-center gap-2">
@@ -227,12 +235,31 @@ function WorktreeCard({ worktree, onDelete, onOpenGit }: WorktreeCardProps) {
             ? `${worktree.ahead} commit${worktree.ahead !== 1 ? "s" : ""} ahead · uncommitted changes`
             : "uncommitted changes"}
         </p>
+      ) : worktree.ahead > 0 ? (
+        <p className="text-xs text-[#22c55e]">
+          ✓ {worktree.ahead} commit{worktree.ahead !== 1 ? "s" : ""} ahead · Clean
+        </p>
       ) : (
         <p className="text-xs text-[#22c55e]">✓ Clean</p>
       )}
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-2 pt-1">
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        {/* GitHub push */}
+        <PushButton projectId={projectId} worktree={worktree} />
+
+        {/* Open PR */}
+        {remote && worktree.ahead > 0 && (
+          <button
+            onClick={() => setShowPRModal(true)}
+            className="flex items-center gap-1 px-2.5 py-1.5 text-xs bg-[#1f2a3e] border border-[#263245]
+              text-[#a8bdd4] rounded-lg hover:text-[#dce8f5] hover:border-[#4195e8] transition-colors"
+          >
+            <GitPullRequest size={11} />
+            Open PR
+          </button>
+        )}
+
         <button
           onClick={() => onOpenGit(worktree)}
           className="px-2 py-1 text-xs border border-[#263245] text-[#a8bdd4] rounded hover:bg-[#263245] transition-colors"
@@ -248,6 +275,14 @@ function WorktreeCard({ worktree, onDelete, onOpenGit }: WorktreeCardProps) {
           Delete
         </button>
       </div>
+
+      {showPRModal && (
+        <CreatePRModal
+          projectId={projectId}
+          headBranch={worktree.branch}
+          onClose={() => setShowPRModal(false)}
+        />
+      )}
     </div>
   )
 }
@@ -266,6 +301,7 @@ export function WorktreePanel({ projectId, onOpenGit }: WorktreePanelProps) {
   const [deleteTarget, setDeleteTarget] = useState<Worktree | null>(null)
 
   const { data: worktrees, isLoading } = useWorktrees(projectId)
+  const { isError: noGitHub } = useRemoteInfo(projectId)
   const deleteMutation = useDeleteWorktree(projectId)
 
   function handleDeleteConfirm(deleteBranch: boolean) {
@@ -319,12 +355,26 @@ export function WorktreePanel({ projectId, onOpenGit }: WorktreePanelProps) {
         {worktrees?.map((wt) => (
           <WorktreeCard
             key={wt.id}
+            projectId={projectId}
             worktree={wt}
             onDelete={setDeleteTarget}
             onOpenGit={(w) => onOpenGit?.(w.path)}
           />
         ))}
       </div>
+
+      {/* GitHub not configured hint */}
+      {noGitHub && (
+        <div className="mx-4 mb-4 px-3 py-2 rounded-lg bg-[#1f2a3e] border border-[#263245] flex items-start gap-2">
+          <Info size={12} className="text-[#607896] mt-0.5 shrink-0" />
+          <p className="text-xs text-[#607896]">
+            Connect GitHub to push branches and open PRs.{" "}
+            <Link href="/settings" className="text-[#4195e8] hover:underline">
+              Configure in Settings →
+            </Link>
+          </p>
+        </div>
+      )}
 
       {/* Delete dialog */}
       {deleteTarget && (
