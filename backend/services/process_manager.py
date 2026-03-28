@@ -79,11 +79,16 @@ class ProcessManager:
 
     def _kill_process(self, run_id: str) -> None:
         """Terminate a PTY process. Must be called under self._lock."""
+        import subprocess
+
         proc = self._processes.pop(run_id, None)
         if proc is None:
             return
         try:
-            proc.terminate()
+            if isinstance(proc, subprocess.Popen):
+                proc.kill()
+            else:
+                proc.terminate()
         except Exception as exc:
             logger.debug("Error terminating process %s: %s", run_id, exc)
 
@@ -187,17 +192,33 @@ class ProcessManager:
             cmd.append(prompt)
         return cmd
 
+    @staticmethod
+    def _spawn_pty(cmd: list[str], cwd: str) -> Any:
+        """Spawn a PTY process. Uses winpty on Windows, pty on Unix."""
+        import sys
+
+        if sys.platform == "win32":
+            import winpty  # pywinpty — Windows ConPTY
+
+            return winpty.PtyProcess.spawn(cmd, cwd=cwd, dimensions=(40, 120))
+        import subprocess
+
+        return subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
     def _pty_read_loop(self, run_id: str, cmd: list[str], cwd: str) -> None:
         """Background thread: read PTY bytes, broadcast to WS, parse events."""
         self._update_run(run_id, {"status": "active", "started_at": _now_iso()})
         self._broadcast(run_id, {"type": "status_update", "status": "active"})
 
         try:
-            import winpty  # pywinpty — Windows ConPTY
-
-            pty = winpty.PtyProcess.spawn(cmd, cwd=cwd, dimensions=(40, 120))
+            pty = self._spawn_pty(cmd, cwd)
         except FileNotFoundError:
             self._fail_run_no_cli(run_id)
+            return
+        except ImportError:
+            msg = "PTY backend not available on this platform"
+            self._update_run(run_id, {"status": "failed", "error_message": msg})
+            self._broadcast(run_id, {"type": "status_update", "status": "failed"})
             return
         except Exception as exc:
             self._update_run(run_id, {"status": "failed", "error_message": str(exc)[:500]})
@@ -220,19 +241,24 @@ class ProcessManager:
 
     def _read_pty(self, run_id: str, pty: Any, parser: StreamJsonParser, detector: PromptDetector) -> None:
         """Inner read loop: drain bytes from pty until EOF."""
+        import subprocess
+
+        stream = pty.stdout if isinstance(pty, subprocess.Popen) else None
         while True:
             try:
-                raw = pty.read(4096)
+                raw = stream.read(4096) if stream else pty.read(4096)
             except EOFError:
                 break
             except Exception:
                 break
             if not raw:
                 break
+            if isinstance(raw, str):
+                raw = raw.encode("utf-8", errors="replace")
             self._buffer_output(run_id, raw)
             self._broadcast(run_id, {"type": "pty_output", "data": base64.b64encode(raw).decode()})
 
-            text = raw.decode("utf-8", errors="replace")
+            text = raw.decode("utf-8", errors="replace") if isinstance(raw, bytes) else raw
             self._process_stream_events(run_id, text, parser)
             self._process_prompt_detection(run_id, text, detector)
 
@@ -316,7 +342,12 @@ class ProcessManager:
 
     def _finalize_pty(self, run_id: str, pty: Any) -> int | None:
         """Wait for PTY to exit and return its exit code."""
+        import subprocess
+
         try:
+            if isinstance(pty, subprocess.Popen):
+                pty.wait()
+                return pty.returncode
             pty.wait()
             return pty.exitstatus
         except Exception:

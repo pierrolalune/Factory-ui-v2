@@ -17,3 +17,7 @@ known-first-party = ["backend"]
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
 pythonpath = ["."]
+asyncio_mode = "auto"
+
+[tool.anyio]
+backends = ["asyncio"]
